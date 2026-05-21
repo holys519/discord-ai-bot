@@ -1,0 +1,38 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama-data:/root/.ollama
+    expose:
+      - "11434"
+    networks:
+      - ai-net
+    restart: unless-stopped
+
+  bot:
+    build:
+      context: ./bot
+    env_file:
+      - .env
+    environment:
+      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434/api/chat}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:1b}
+    depends_on:
+      - ollama
+    networks:
+      - ai-net
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  ollama-data:
+
+networks:
+  ai-net:
+    driver: bridge
